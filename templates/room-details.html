@@ -6,11 +6,12 @@
         <div class="col-md-7 m-3">
             <h2>{{ room.name }}</h2>
             {% if user.role >= 2 %}
-            <span class="text-muted">added by</span> {{ addedBy.name }}{{ userBadge(addedBy.role) }}
+            <span class="text-muted">added by</span> <a href="/users/{{ addedBy.ident }}">{{ addedBy.name }}</a>{{ userBadge(addedBy.role) }}
             {% endif %}
             <hr>
             <div class="my-2 form-text">
-                Last antifreezed: {{ lastAntifreezed.strftime("%e %b %Y %I:%M:%S%p") if lastAntifreezed is not none else "Never" }}
+                <a href="https://{{ room.server }}/rooms/info/{{ room.roomId }}">Room info</a>
+                 &bullet; Last antifreezed: {{ lastAntifreezed.strftime("%e %b %Y %I:%M:%S%p") if lastAntifreezed is not none else "Never" }}
                  &bullet; Last checked: {{ lastChecked.strftime("%e %b %Y %I:%M:%S%p") if lastChecked is not none else "Never" }}
             </div>
             <ul class="nav nav-tabs">
