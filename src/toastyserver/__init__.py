@@ -292,8 +292,8 @@ async def roomDetails(roomId: int, user: User):
         user=user,
         room=room,
         addedBy=addedBy,
-        lastAntifreezed=room.runs[0].ranAt if len(room.runs) else None,
-        lastChecked=i[0].ranAt
+        lastChecked=room.runs[0].ranAt if len(room.runs) else None,
+        lastAntifreezed=i[0].ranAt
         if len(
             i := list(
                 filter(
