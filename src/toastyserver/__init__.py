@@ -265,7 +265,7 @@ async def allRooms(user):
             rooms.append((room, users[room.addedBy]))
     return await render_template(
         "rooms.html",
-        rooms=sorted(rooms, key=lambda r: r[0]),
+        rooms=sorted(rooms, key=lambda r: r[0].name),
         title="All rooms",
         activePage="allRooms",
         showUsers=True,
