@@ -484,8 +484,8 @@ async def editUser(userId: int, user: User):
         abort(400)
     if len(form.username) > 16:
         abort(400)
-    user.role = form.role
-    user.name = form.username
-    await usermanager.saveUser(user)
+    target.role = form.role
+    target.name = form.username
+    await usermanager.saveUser(target)
     await flash("User saved.", "success")
     return redirect(url_for("userSettings", userId=userId))
