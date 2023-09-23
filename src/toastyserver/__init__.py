@@ -181,7 +181,7 @@ async def finalizeSeLogin():
                 )
             )
         ) as response:
-            userName = (await response.json())["items"][0]["display_name"]
+            userName = (await response.json())["items"][0]["display_name"][:16]
         async with session.get(
             f"https://chat.stackexchange.com/account/{userId}", allow_redirects=False
         ) as response:
