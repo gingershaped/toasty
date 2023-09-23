@@ -3,6 +3,7 @@ from os import environ
 from urllib.parse import urlencode, urljoin, urlsplit
 from http.client import responses
 from asyncio import wait_for
+from string import printable
 
 from quart import Quart, g, render_template, request, redirect, abort, flash, url_for
 from quart_schema import QuartSchema
@@ -403,6 +404,7 @@ async def newRoom(user: User):
                 abort(403)
         if len(form.message) > 128:
             abort(400)
+        form.message = "".join(char for char in form.message if char in printable).strip()
         if len(form.message) <= 0:
             form.message = DEFAULTMSG
         if user.role < Role.MODERATOR:

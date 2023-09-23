@@ -57,6 +57,9 @@ class Antifreezer:
         async with self.manager.db.session() as session:
             room = await self.manager.getRoom(roomId)
             assert room is not None
+            if not room.active:
+                logger.info("Room is not active. Skipping.")
+                return
             lastChecked = datetime.now()
             try:
                 lastMessage = await self.lastMessageInRoom(room.roomId)
