@@ -493,6 +493,9 @@ async def editUser(userId: int, user: User):
         abort(400)
     if len(form.username) > 16:
         abort(400)
+    form.username = "".join(char for char in form.username if char in printable).strip()
+    if len(form.username) <= 0:
+        abort(400)
     target.role = form.role
     target.name = form.username
     await usermanager.saveUser(target)
