@@ -327,6 +327,9 @@ async def editRoom(roomId: int, user: User):
             abort(403)
     if len(form.message) > 128:
         abort(400)
+    form.message = "".join(char for char in form.message if char in printable).strip()
+    if len(form.message) <= 0:
+        form.message = DEFAULTMSG
     room.message = form.message
     room.active = form.active
     room.locked = form.locked
