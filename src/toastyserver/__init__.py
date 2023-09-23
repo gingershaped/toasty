@@ -491,6 +491,8 @@ async def editUser(userId: int, user: User):
         abort(400)
     if user.role < Role.DEVELOPER and form.role != target.role and form.role > Role.USER:
         abort(400)
+    if user.role < Role.DEVELOPER and form.role >= Role.DEVELOPER:
+        abort(400)
     if len(form.username) > 16:
         abort(400)
     form.username = "".join(char for char in form.username if char in printable).strip()
