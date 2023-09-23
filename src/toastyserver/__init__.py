@@ -259,9 +259,9 @@ async def allRooms(user):
         async for room in roommanager.allRooms():
             if room.addedBy not in users:
                 assert (
-                    user := await usermanager.getUser(room.addedBy, session)
+                    roomUser := await usermanager.getUser(room.addedBy, session)
                 ) is not None
-                users[room.addedBy] = user
+                users[room.addedBy] = roomUser
             rooms.append((room, users[room.addedBy]))
     return await render_template(
         "rooms.html",
