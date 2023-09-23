@@ -1,0 +1,48 @@
+{% extends "common.html" %}
+{% block title %}Add Room{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="/static/addroom.css">
+<script type="module" src="/static/addroom.bundle.js"></script>
+{% endblock %}
+{% block body %}
+<template id="mod-room-entry">
+    <li class="list-group-item">
+        <input class="form-check-input my-0 me-2 align-self-center" id="room-custom-id-radio" type="radio" name="room-id" value="custom" required>
+        <!-- <label class="me-1" for="room-custom">Enter a room ID:</label> -->
+        <input class="form-control" type="number" id="room-custom-id" placeholder="Enter a room ID">
+    </li>
+</template>
+<main class="container-lg mt-1">
+    <h1>Add a room</h1>
+    <hr>
+    <form method="post" autocomplete="off">
+        <div class="row justify-content-center h-100">
+            <div class="col-md-5">
+                <select id="server-select" class="form-select" name="server">
+                    <option value="https://chat.stackexchange.com" selected>Stack Exchange</option>
+                    <option value="https://chat.meta.stackexchange.com">Meta Stack Exchange</option>
+                    <option value="https://chat.stackoverflow.com">Stack Overflow</option>
+                </select>
+                <input type="search" class="form-control my-2" id="search-rooms" placeholder="Search rooms">
+                <div class="border rounded border-1" id="room-list-wrapper">
+                    <div id="room-spinner" class="d-flex justify-content-center my-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <div id="room-no-results" class="d-flex justify-content-center my-1 d-none">
+                        <span class="text-muted">there's nothing here</span>
+                    </div>
+                    <ul id="room-list" class="list-group list-group-flush rounded">
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-6 d-flex flex-column">
+                {% include "room-edit-form.html" %}
+                <hr class="mt-auto mb-2">
+                <button type="submit" class="btn btn-primary align-self-sm-end">Add room</button>
+            </div>
+        </div>
+    </form>
+</main>
+{% endblock %}

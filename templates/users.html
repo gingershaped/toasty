@@ -1,0 +1,26 @@
+{% extends "common.html" %}
+{% set activePage = "users" %}
+{% block title %}Users{% endblock %}
+{% block body %}
+{% macro userEntry(name, ident, role) %}
+<a class="list-group-item list-group-item-action" href="/users/{{ ident }}/">
+    <div>
+        {{ name }}{{ userBadge(role) }}
+        <div class="text-muted">#{{ ident }}</div>
+    </div>
+</a>
+{% endmacro %}
+<main class="container-lg">
+    <div class="row justify-content-center">
+        <div class="col-md-7 m-3">
+            <h1 class="mb-0">Users</h1>
+            <hr class="my-3">
+            <div class="list-group">
+                {% for user in users %}
+                    {{ userEntry(user.name, user.ident, user.role) }}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

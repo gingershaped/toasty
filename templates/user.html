@@ -1,0 +1,44 @@
+{% extends "common.html" %}
+{% block title %}{{ target.name }}{% endblock %}
+{% block body %}
+<main class="container-lg">
+    <div class="row justify-content-center">
+        <div class="col-md-7 m-3">
+            <h3>{{ target.name }}{{ userBadge(target.role) }}</h3>
+            <span class="text-muted">#{{ target.ident }}{% if user.role >= 2 %} &bullet; <a href="https://stackexchange.com/users/{{ target.ident }}">Network profile</a> &bullet; <a href="https://chat.stackexchange.com/account/{{ target.ident }}">Chat profile</a> &bullet; <a href="rooms">Rooms</a>{% endif %}</span>
+            <hr>
+            <form class="d-flex flex-column" method="post" action="edit">
+                <div class="mb-3">
+                    <label class="form-label" for="username">Username</label>
+                    <input class="form-control" type="text" id="username" name="username" value="{{ target.name }}" maxlength="16">
+                    <div class="form-text">
+                        Maximum length 16 bytes.
+                    </div>
+                </div>
+                {% if user.role >= 2 %}
+                <div class="mb-3">
+                    <label class="form-label" for="role">Role</label>
+                    <select class="form-select" name="role">
+                        {% if user.role >= 3 %}
+                            {% set options = [(0, "Locked"), (1, "User"), (2, "Moderator"), (3, "Developer")] %}
+                        {% elif user.role == 2 and target.role >= 2 %}
+                            {% set options = [(target.role.value, target.role.name|title)] %}
+                        {% elif user.role == 2 and target.role < 2 %}
+                            {% set options = [(0, "Locked"), (1, "User")] %}
+                        {% else %}
+                            {% set options = [(target.role.value, target.role.name|title)] %}
+                        {% endif %}
+                        {% for role, title in options %}
+                            <option value="{{ role }}"{% if role == target.role %} selected{% endif %}>{{ title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <p>Account created at {{ target.created.strftime("%e %b %Y %H:%M:%S%p") }}</p>
+                {% endif %}
+                <hr class="mb-2">
+                <button type="submit" class="btn btn-primary align-self-sm-end">Save changes</button>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock %}

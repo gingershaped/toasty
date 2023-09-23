@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "toastyserver"
+version = "0.1.0"
+description = ""
+authors = ["Ginger <75683114+gingerindustries@users.noreply.github.com>"]
+readme = "README.md"
+packages = [{ include = "toastyserver", from="src" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+sechat = {git = "https://github.com/GingerIndustries/sechat", rev = "v2"}
+quart = "^0.18.4"
+quart-schema = "^0.16.0"
+apscheduler = "^3.10.4"
+motor = "<3.2.0"
+odmantic = "^0.9.2"
+pydantic = "^1.0.0"
+bs4 = "^0.0.1"
+aiohttp = "^3.8.5"
+hypercorn = "^0.14.4"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.9.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

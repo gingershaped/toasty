@@ -1,0 +1,91 @@
+@import "bootstrap/scss/functions";
+
+$nav-link-font-size: 14px;
+
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/variables-dark";
+
+@import "bootstrap/scss/maps";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/utilities";
+
+@import "bootstrap/scss/root";
+@import "bootstrap/scss/reboot";
+@import "bootstrap/scss/type";
+@import "bootstrap/scss/images";
+@import "bootstrap/scss/containers";
+@import "bootstrap/scss/grid";
+@import "bootstrap/scss/tables";
+@import "bootstrap/scss/forms";
+@import "bootstrap/scss/buttons";
+@import "bootstrap/scss/transitions";
+@import "bootstrap/scss/dropdown";
+@import "bootstrap/scss/button-group";
+@import "bootstrap/scss/nav";
+@import "bootstrap/scss/navbar";
+//@import "bootstrap/scss/card";
+@import "bootstrap/scss/accordion";
+@import "bootstrap/scss/breadcrumb";
+@import "bootstrap/scss/pagination";
+@import "bootstrap/scss/badge";
+@import "bootstrap/scss/alert";
+@import "bootstrap/scss/progress";
+@import "bootstrap/scss/list-group";
+@import "bootstrap/scss/close";
+//@import "bootstrap/scss/toasts";
+@import "bootstrap/scss/modal";
+@import "bootstrap/scss/tooltip";
+//@import "bootstrap/scss/popover";
+//@import "bootstrap/scss/carousel";
+@import "bootstrap/scss/spinners";
+@import "bootstrap/scss/offcanvas";
+@import "bootstrap/scss/placeholders";
+@import "bootstrap/scss/helpers";
+
+@import "bootstrap/scss/utilities/api";
+
+html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+main {
+    flex: 1;
+}
+
+footer {
+    display: flex;
+    margin-top: 20px;
+    width: 100%;
+    padding: 5px;
+    font-size: 14px;
+}
+
+.btn-plain {
+    --bs-btn-color: #{color-contrast($body-bg)};
+    --bs-btn-bg: #{$body-bg};
+    --bs-btn-border-color: #{$secondary};
+    --bs-btn-hover-color: #{color-contrast($body-secondary-bg)};
+    --bs-btn-hover-bg: #{$body-secondary-bg};
+    --bs-btn-hover-border-color: #{$secondary};
+    --bs-btn-active-color: #{color-contrast($body-secondary-bg)};
+    --bs-btn-active-bg: #{shade-color($body-secondary-bg, 10%)};
+    --bs-btn-active-border-color: #{$secondary};
+}
+
+.bg-orange {
+    background-color: #{$orange};
+}
+
+.badge {
+    vertical-align: middle;
+}

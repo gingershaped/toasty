@@ -1,0 +1,16 @@
+@media (min-width: 767.98px) {
+    #room-list-wrapper {
+        height: 40vh;
+        overflow-x: auto;
+    }
+}
+
+#room-list {
+    >li {
+        display: flex;
+
+        >input.form-check-input {
+            flex-shrink: 0;
+        }
+    }
+}

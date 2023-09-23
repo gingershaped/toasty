@@ -1,0 +1,90 @@
+{% extends "common.html" %}
+{% block title %}{{ room.name }}{% endblock %}
+{% block body %}
+<main class="container-lg">
+    <div class="row justify-content-center">
+        <div class="col-md-7 m-3">
+            <h2>{{ room.name }}</h2>
+            {% if user.role >= 2 %}
+            <span class="text-muted">added by</span> {{ addedBy.name }}{{ userBadge(addedBy.role) }}
+            {% endif %}
+            <hr>
+            <div class="my-2 form-text">
+                Last antifreezed: {{ lastAntifreezed.strftime("%e %b %Y %I:%M:%S%p") if lastAntifreezed is not none else "Never" }}
+                 &bullet; Last checked: {{ lastChecked.strftime("%e %b %Y %I:%M:%S%p") if lastChecked is not none else "Never" }}
+            </div>
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#room-settings">Details</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#room-runs">
+                        Runs
+                        {% if room.pendingErrors > 0 %}
+                        <span class="badge text-bg-danger">{{ room.pendingErrors }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div id="room-settings" class="tab-pane fade show active">
+                    <form class="d-flex flex-column" method="post" action="edit" autocomplete="off">
+                        <input type="hidden" name="room-id" value="{{ room.roomId }}">
+                        {% include "room-edit-form.html" %}
+                        {% if not (room.locked and user.role < 2) %}
+                        <hr class="mt-auto mb-2">
+                        <div class="d-flex align-self-sm-end gap-2">
+                            {% if user.role >= 3 %}
+                            <button type="button" id="check-now" class="btn btn-secondary">Check now</button>
+                            {% endif %}
+                            <button type="submit" class="btn btn-danger" formaction="delete">Delete room</button>
+                            <button type="submit" class="btn btn-primary">Save room</button>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+                <div id="room-runs" class="tab-pane fade pt-1">
+                    {% if room.pendingErrors > 0 %}
+                    <button id="clear-errors" type="button" class="btn btn-link btn-sm ps-0">Clear pending errors</button>
+                    {% endif %}
+                    <ul class="list-group mt-1">
+                        {% for run in room.runs %}
+                        <li class="list-group-item">
+                            <div class="d-flex">
+                                <span class="me-auto">{{ run.ranAt.strftime("%e %b %Y %I:%M:%S%p") }}</span>
+                                {% if run.result.value == 0 %}
+                                <span class="badge bg-success align-self-baseline">OK</span>
+                                {% elif run.result.value == 1 %}
+                                <span class="badge bg-primary align-self-baseline">Antifreezed</span>
+                                {% else %}
+                                <span class="badge bg-danger align-self-baseline">Error</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-muted form-text">
+                                {% if run.result.value == 2 %}
+                                <span class="text-danger">An error occured:</span> {{ run.error }}
+                                {% else %}
+                                Most recent message sent at {{run.mostRecentMessage.strftime("%e %b %Y %I:%M:%S%p") }}
+                                {% endif %}
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% if user.role >= 3 %}
+<script>
+    document.getElementById("check-now")?.addEventListener("click", function() {
+        fetch("forcecheck", { method: "post" }).then(() => window.location.reload())
+    })
+</script>
+{% endif %}
+<script>
+    document.getElementById("clear-errors")?.addEventListener("click", function() {
+        fetch("clearerrors", { method: "post" }).then(() => window.location.reload())
+    })
+</script>
+{% endblock %}

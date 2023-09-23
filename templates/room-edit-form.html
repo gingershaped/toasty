@@ -1,0 +1,22 @@
+{% set form=form|default({}) %}
+<div class="mb-3">
+    <label for="room-message" class="form-label">Antifreeze message to send</label>
+    <input type="text" class="form-control" id="room-message" name="message" maxlength="128" value="{{ form.message|default('') }}">
+    <div class="form-text">
+        Max length 128 bytes. If empty, a default message will be used. Available substitutions:
+        <ul class="my-1">
+            <li><code>{days}</code> - Days since last antifreeze run</li>
+        </ul>
+        If the message <code>---</code> is used, it will not be shown in the transcript.
+    </div>
+</div>
+<div class="form-check form-switch">
+    <input class="form-check-input" type="checkbox" role="switch" id="run-antifreeze" name="active" {% if form.active|default(true) %}checked{% endif %}>
+    <label class="form-check-label" for="run-antifreeze">Run antifreeze</label>
+</div>
+{% if user.role > 1 %}
+<div class="form-check form-switch">
+    <input class="form-check-input" type="checkbox" role="switch" id="locked" name="locked" {% if form.locked|default(false) %}checked{% endif %}>
+    <label class="form-check-label" for="run-antifreeze">Locked</label>
+</div>
+{% endif %}

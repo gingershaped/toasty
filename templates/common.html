@@ -1,0 +1,121 @@
+{% macro navitem(href, id, label) -%}
+<li class="nav-item">
+    <a class="nav-link{% if id == activePage %} active{% endif %}" href="{{ href }}">{{ label }}</a>
+</li>
+{% endmacro -%}
+{% macro navdropdown(options, ddid, label) -%}
+<li class="nav-item dropdown">
+    {% set ns = namespace(active=false) %}
+    {% for href, label, id in options %}
+        {% if id == activePage or id == ddid %}
+            {% set ns.active = true %}
+        {% endif %}
+    {% endfor %}
+    <a class="nav-link dropdown-toggle{% if ns.active %} active{% endif %}" data-bs-toggle="dropdown" href="#" role="button"
+        aria-expanded="false">{{ label }}</a>
+    <ul class="dropdown-menu">
+        {% for href, label, id in options %}
+            {% if href == "#" %}
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+            {% else %}
+                <li><a class="dropdown-item{% if id == activePage %} active{% endif %}" href="{{ href }}">{{ label }}</a></li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</li>
+{% endmacro -%}
+{% macro userBadge(role) -%}
+{% if role == 0 %}
+<span class="badge bg-secondary">Locked</span>
+{% elif role == 2 %}
+<span class="badge bg-primary">Mod</span>
+{% elif role == 3 %}
+<span class="badge bg-orange">Dev</span>
+{% endif %}
+{% endmacro -%}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} | Toasty</title>
+    <link rel="stylesheet" href="/static/common.css">
+    <script type="module" src="/static/common.bundle.js"></script>
+    {% block head %}{% endblock %}
+</head>
+
+<body data-user-role="{{ user.role.value if user is not none else -1 }}">
+    <nav class="navbar navbar-expand-md bg-body-tertiary border-bottom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <img src="/static/resources/logo-temp.svg" alt="Logo" height="24" class="d-inline-block align-text-top">
+                Toasty
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav me-auto">
+                    {{ navitem("/", "status", "status")}}
+                    {% if user is not none %}
+                        {% if user.role <= 1 %}
+                            {{ navitem("/rooms/", "rooms" , "rooms") }}
+                        {% else %}
+                            {{ navdropdown([("/rooms/", "my rooms", "myRooms"), ("/rooms/all", "all rooms", "allRooms")], "rooms", "rooms") }}
+                        {% endif %}
+                        {% if user.role > 1 %}
+                            {{ navitem("/users", "users", "users") }}
+                        {% endif %}
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if user is not none %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+                                aria-expanded="false">{{ user.name }}{{ userBadge(user.role) }}</a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="/users/{{ user.ident }}">Account settings</a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item text-danger" href="/auth/logout">Log out</a></li>
+                            </ul>
+                    </li>
+                    {% else %}
+                        {{ navitem("/auth/login", "login", "log in") }}
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% with messages = get_flashed_messages(true) %}
+    {% if messages %}
+    {% for kind, message in messages %}
+    <div class="alert alert-{{ kind }} alert-dismissible fade show m-2" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+    {% block body %}{% endblock %}
+    <footer class="bg-body-tertiary border-top ps-4 py-2">
+        <p class="text-muted mb-0 me-auto">
+            Built by <a href="https://codegolf.stackexchange.com/users/108218/">Ginger</a> for the fine people of <a
+                href="https://stackexchange.net">Stack Exchange</a>
+            <br>
+            Server and domain generously provided by <a
+                href="https://langdev.stackexchange.com/users/5/rydwolf-programs">Rydwolf</a>
+        </p>
+        <p class="text-muted mb-0 align-self-end">
+            chat &bullet; source &bullet; about
+        </p>
+    </footer>
+</body>
+
+</html>
