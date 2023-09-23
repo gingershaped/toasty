@@ -43,7 +43,6 @@ class UserManager:
                 if token is not None and datetime.now() > token.expiry:
                     await self.db.delete(token)
                     return redirect(url_for("login?{}".format(urlencode({"redirect": request.path}))))
-            print(args, kwargs)
             return await current_app.ensure_async(func)(*args, user=user, **kwargs)
         return decorator
             
