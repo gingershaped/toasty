@@ -3,12 +3,17 @@
 {% block title %}Status{% endblock%}
 {% block body %}
 <main class="container-lg">
-    <div class="row">
-        <div class="col-sm-4">
-            <img src="/static/resources/logo-temp.svg" width="150">
-        </div>
-        <div class="col-sm-8">
-            Status goes here. Sunt ad quis veniam occaecat anim quis aliqua. Fugiat deserunt proident Lorem esse est voluptate minim qui dolore excepteur veniam dolore. Cillum mollit aliqua cillum ipsum cillum elit velit non nulla excepteur voluptate sint. Pariatur qui amet nulla pariatur. Esse sint nulla eu ullamco id elit est magna consectetur sint pariatur consequat dolore adipisicing.
+    <div class="row justify-content-center">
+        <div class="col-md-7 mt-5">
+            <h1 class="mb-0"><img src="/static/resources/logo-temp.svg" height="50" class="me-2">Toasty Antifreeze</h1>
+            <hr class="my-2">
+            <p>Status: <span class="text-success">Online</span></p>
+            <p>Currently antifreezing {{ nrooms }} rooms. Add yours today!</p>
+            {% if user is not none %}
+            <a class="btn btn-primary" href="/rooms/add">Add room</a>
+            {% else %}
+            <a class="btn btn-primary" href="/auth/login">Log in</a>
+            {% endif %}
         </div>
     </div>
 </main>

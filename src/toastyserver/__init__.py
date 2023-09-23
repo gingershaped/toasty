@@ -92,7 +92,7 @@ async def error(error, *, user):
 @app.route("/")
 @usermanager.provideUser
 async def index(user):
-    return await render_template("index.html", user=user)
+    return await render_template("index.html", user=user, nrooms=await roommanager.db.count(AntifreezeRoom))
 
 
 @app.route("/auth/login")
