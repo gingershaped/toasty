@@ -25,7 +25,8 @@ from toastyserver.models import (
     EditRoomForm,
     EditUserForm,
     AntifreezeResult,
-    Server
+    Server,
+    DEFAULTMSG
 )
 
 antifreezer, bot = None, None
@@ -321,7 +322,7 @@ async def editRoom(roomId: int, user: User):
             ident
             async for ident, name in jankapi.getUserOwnedRooms(user, room.server.value)
         ]
-        if form.room not in allowedRooms:
+        if roomId not in allowedRooms:
             abort(403)
     if len(form.message) > 128:
         abort(400)
@@ -351,7 +352,7 @@ async def deleteRoom(roomId: int, user: User):
             ident
             async for ident, name in jankapi.getUserOwnedRooms(user, room.server.value)
         ]
-        if form.room not in allowedRooms:
+        if roomId not in allowedRooms:
             abort(403)
     await roommanager.deleteRoom(room)
     antifreezer.removeAntifreeze(room.roomId)
@@ -402,6 +403,8 @@ async def newRoom(user: User):
                 abort(403)
         if len(form.message) > 128:
             abort(400)
+        if len(form.message) <= 0:
+            form.message = DEFAULTMSG
         if user.role < Role.MODERATOR:
             form.locked = False
         details = await jankapi.getRoomDetails(form.room, form.server.value)
@@ -413,6 +416,7 @@ async def newRoom(user: User):
                 active=form.active,
                 locked=form.locked,
                 addedBy=user.ident,
+                message=form.message,
             )
         )
         await antifreezer.runAntifreeze(form.room)

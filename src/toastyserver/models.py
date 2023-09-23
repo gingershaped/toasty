@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from odmantic import Model, EmbeddedModel, Field, Reference
 from pydantic import BaseModel, Field as PDField
 
+DEFAULTMSG = "Toasty Antifreeze triggered! Last message was sent {days} days ago."
 
 class Server(str, Enum):
     SE = "https://chat.stackexchange.com"
@@ -55,7 +56,7 @@ class AntifreezeRoom(Model):
     active: bool = True
     locked: bool = False
     pendingErrors: int = 0
-    message: str = "Toasty Antifreeze triggered! Last message was sent {days} days ago."
+    message: str = DEFAULTMSG
     runs: list[AntifreezeRun] = []
     addedBy: int  # Why isn't this a reference? Becase odmantic doesn't support querying across refrences for SOME REASON
 
