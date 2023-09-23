@@ -25,6 +25,7 @@ from toastyserver.models import (
     EditRoomForm,
     EditUserForm,
     AntifreezeResult,
+    Server
 )
 
 antifreezer, bot = None, None
@@ -388,6 +389,8 @@ async def newRoom(user: User):
             form = NewRoomForm(**(await request.form))
         except ValidationError:
             abort(400)
+        if form.server != Server.SE:
+            abort(400) # TODO
         if user.role < Role.MODERATOR:
             allowedRooms = [
                 ident
