@@ -10,7 +10,7 @@
             <p>Status: <span class="text-success">Online</span></p>
             <p>Currently antifreezing {{ nrooms }} rooms. Add yours today!</p>
             {% if user is not none %}
-            <a class="btn btn-primary" href="/rooms/add">Add room</a>
+            <a class="btn btn-primary" href="/rooms/new">Add room</a>
             {% else %}
             <a class="btn btn-primary" href="/auth/login">Log in</a>
             {% endif %}
