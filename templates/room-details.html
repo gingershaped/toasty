@@ -10,7 +10,7 @@
             {% endif %}
             <hr>
             <div class="my-2 form-text">
-                <a href="https://{{ room.server }}/rooms/info/{{ room.roomId }}">Room info</a>
+                <a href="https://{{ room.server.value }}/rooms/info/{{ room.roomId }}">Room info</a>
                  &bullet; Last antifreezed: {{ lastAntifreezed.strftime("%e %b %Y %I:%M:%S%p") if lastAntifreezed is not none else "Never" }}
                  &bullet; Last checked: {{ lastChecked.strftime("%e %b %Y %I:%M:%S%p") if lastChecked is not none else "Never" }}
             </div>
