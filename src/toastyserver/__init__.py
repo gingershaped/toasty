@@ -489,7 +489,7 @@ async def editUser(userId: int, user: User):
         target = user
     if user.role < Role.MODERATOR and form.role != target.role:
         abort(400)
-    if user.role < Role.DEVELOPER and form.role > Role.USER:
+    if user.role < Role.DEVELOPER and form.role != target.role and form.role > Role.USER:
         abort(400)
     if len(form.username) > 16:
         abort(400)
