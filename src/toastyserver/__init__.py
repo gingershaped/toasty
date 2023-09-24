@@ -321,7 +321,7 @@ async def editRoom(roomId: int, user: User):
             abort(403)
         allowedRooms = [
             ident
-            async for ident, name in jankapi.getUserOwnedRooms(user, room.server.value)
+            async for ident, name in jankapi.getUserOwnedRooms(user, room.server.value, False)
         ]
         if roomId not in allowedRooms:
             abort(403)
@@ -354,7 +354,7 @@ async def deleteRoom(roomId: int, user: User):
             abort(403)
         allowedRooms = [
             ident
-            async for ident, name in jankapi.getUserOwnedRooms(user, room.server.value)
+            async for ident, name in jankapi.getUserOwnedRooms(user, room.server.value, False)
         ]
         if roomId not in allowedRooms:
             abort(403)
@@ -488,11 +488,13 @@ async def editUser(userId: int, user: User):
     else:
         target = user
     if user.role < Role.MODERATOR and form.role != target.role:
-        abort(400)
+        abort(403)
     if user.role < Role.DEVELOPER and form.role != target.role and form.role > Role.USER:
-        abort(400)
-    if user.role < target.role and user.ident != target.ident:
-        abort(400)
+        abort(403)
+    if user.role < Role.MODERATOR and form.role != target.role and form.role < Role.MODERATOR:
+        abort(403)
+    if user.role < target.role and userId != user.ident:
+        abort(403)
     if len(form.username) > 16:
         abort(400)
     form.username = "".join(char for char in form.username if char in printable).strip()
