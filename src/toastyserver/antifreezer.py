@@ -1,5 +1,6 @@
 from typing import Optional
 from datetime import datetime
+from urllib.parse import urljoin
 
 from odmantic import AIOEngine
 from odmantic.session import AIOSession
@@ -12,7 +13,7 @@ from quart import Config
 from logging import Logger
 
 from toastyserver.roommanager import RoomManager
-from toastyserver.models import AntifreezeRun, AntifreezeResult
+from toastyserver.models import AntifreezeRun, AntifreezeResult, RoomDetails
 
 
 class Antifreezer:
@@ -51,6 +52,15 @@ class Antifreezer:
             event = (await response.json())["events"][0]
         return datetime.fromtimestamp(event["time_stamp"])
 
+    async def getRoomDetails(self, ident: int, server: str) -> RoomDetails:
+        async with self.bot.session.get(urljoin(server, f"/rooms/thumbs/{ident}")) as response:
+                json = await response.json()
+        return RoomDetails(
+            ident=int(json["id"]),
+            name=json["name"],
+            description=json["description"]
+        )
+
     async def runAntifreeze(self, roomId: int):
         logger = self.logger.getChild(str(roomId))
         logger.info(f"Checking {roomId}")
@@ -77,6 +87,8 @@ class Antifreezer:
                 )
                 room.pendingErrors += 1
             else:
+                details = await self.getRoomDetails(roomId, room.server)
+                room.name = details.name
                 logger.info(
                     f"Last sent message was at {lastMessage.strftime('%e %b %Y %H:%M:%S%p')}, which was {(lastChecked - lastMessage).days} days ago"
                 )

@@ -412,7 +412,7 @@ async def newRoom(user: User):
             form.message = DEFAULTMSG
         if user.role < Role.MODERATOR:
             form.locked = False
-        details = await jankapi.getRoomDetails(form.room, form.server.value)
+        details = await antifreezer.getRoomDetails(form.room, form.server.value)
         await roommanager.saveRoom(
             AntifreezeRoom(
                 roomId=form.room,

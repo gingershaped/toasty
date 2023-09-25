@@ -69,17 +69,6 @@ class JankApi:
                 continue
             yield ident, name.attrs["title"]
 
-    async def getRoomDetails(self, ident: int, server: str) -> RoomDetails:
-        async with ClientSession() as session:
-            async with session.get(urljoin(server, f"/rooms/info/{ident}")) as response:
-                soup = BeautifulSoup(await response.read(), features="html.parser")
-        assert isinstance(card := soup.find(class_="roomcard-xxl"), Tag)
-        assert isinstance(header := card.find("h1"), Tag)
-        assert isinstance(description := card.find("p"), Tag)
-        return RoomDetails(
-            ident, header.text.strip(), "\n".join(description.stripped_strings)
-        )
-
     @validate_request(RoomListRequest)
     @validate_response(RoomListResponse)
     async def userOwnedRoomsEndpoint(self, user: User, data: RoomListRequest):
