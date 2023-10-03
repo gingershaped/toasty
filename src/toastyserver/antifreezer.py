@@ -49,13 +49,12 @@ class Antifreezer:
             data={"since": 0, "mode": "Messages", "msgCount": 1, "fkey": self.bot.fkey},
             headers={"Referer": "https://chat.stackexchange.com/rooms/{roomId}"},
         ) as response:
+            # Ginger, please remember that you're only requesting a single message from the client
+            # Also, please remember the 21st night of September
             try:
                 event = next(filter(lambda msg: msg["user_id"] > 0, (await response.json())["events"]))
             except StopIteration:
-                try:
-                    event = (await response.json())["events"][-1] # unfortunate hack
-                except IndexError:
-                    return datetime.fromtimestamp(0) # extra-unfortunate hack
+                return datetime.fromtimestamp(0) # unfortunate hack
         return datetime.fromtimestamp(event["time_stamp"])
 
     async def getRoomDetails(self, ident: int, server: str) -> RoomDetails:
