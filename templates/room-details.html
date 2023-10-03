@@ -65,7 +65,7 @@
                                 {% if run.result.value == 2 %}
                                 <span class="text-danger">An error occured:</span> {{ run.error }}
                                 {% else %}
-                                Most recent message sent at {{run.mostRecentMessage.strftime("%e %b %Y %I:%M:%S%p") }}
+                                Most recent message sent {{("at" + run.mostRecentMessage.strftime("%e %b %Y %I:%M:%S%p")) if run.mostRecentMessage.timestamp() != 0 else "a while ago" }}
                                 {% endif %}
                             </div>
                         </li>
