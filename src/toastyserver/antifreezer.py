@@ -49,7 +49,7 @@ class Antifreezer:
             data={"since": 0, "mode": "Messages", "msgCount": 1, "fkey": self.bot.fkey},
             headers={"Referer": "https://chat.stackexchange.com/rooms/{roomId}"},
         ) as response:
-            # Ginger, please remember that you're only requesting a single message from the client
+            # Ginger, please remember that you're only requesting a single message from chat
             # Also, please remember the 21st night of September
             try:
                 event = next(filter(lambda msg: msg["user_id"] > 0, (await response.json())["events"]))
