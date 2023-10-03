@@ -50,9 +50,12 @@ class Antifreezer:
             headers={"Referer": "https://chat.stackexchange.com/rooms/{roomId}"},
         ) as response:
             try:
-                event = next(filter(lambda msg: msg["user_id"] not in (-1,), (await response.json())["events"]))
+                event = next(filter(lambda msg: msg["user_id"] > 0, (await response.json())["events"]))
             except StopIteration:
-                event = (await response.json())["events"][-1] # unfortunate hack
+                try:
+                    event = (await response.json())["events"][-1] # unfortunate hack
+                except IndexError:
+                    return datetime.fromtimestamp(0) # extra-unfortunate hack
         return datetime.fromtimestamp(event["time_stamp"])
 
     async def getRoomDetails(self, ident: int, server: str) -> RoomDetails:
