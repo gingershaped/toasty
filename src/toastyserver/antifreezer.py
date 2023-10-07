@@ -46,16 +46,15 @@ class Antifreezer:
     async def lastMessageInRoom(self, roomId: int) -> datetime:
         async with self.bot.session.post(
             f"https://chat.stackexchange.com/chats/{roomId}/events",
-            data={"since": 0, "mode": "Messages", "msgCount": 1, "fkey": self.bot.fkey},
+            data={"since": 0, "mode": "Messages", "msgCount": 100, "fkey": self.bot.fkey},
             headers={"Referer": "https://chat.stackexchange.com/rooms/{roomId}"},
         ) as response:
-            # Ginger, please remember that you're only requesting a single message from chat
-            # Also, please remember the 21st night of September
-            try:
-                event = next(filter(lambda msg: msg["user_id"] > 0, (await response.json())["events"]))
-            except StopIteration:
+            # Ginger, please remember the 21st night of September
+            humanMessages = list(filter(lambda msg: msg["user_id"] > 0, (await response.json())["events"]))
+            if not len(humanMessages):
                 return datetime.fromtimestamp(0) # unfortunate hack
-        return datetime.fromtimestamp(event["time_stamp"])
+            latestMessage = humanMessages[-1]
+        return datetime.fromtimestamp(latestMessage["time_stamp"])
 
     async def getRoomDetails(self, ident: int, server: str) -> RoomDetails:
         async with self.bot.session.get(urljoin(server, f"/rooms/thumbs/{ident}")) as response:
