@@ -412,6 +412,7 @@ async def newRoom(user: User):
             form.message = DEFAULTMSG
         if user.role < Role.MODERATOR:
             form.locked = False
+            await antifreezer.notifyRoomAdded(form.room, user)
         details = await antifreezer.getRoomDetails(form.room, form.server.value)
         await roommanager.saveRoom(
             AntifreezeRoom(

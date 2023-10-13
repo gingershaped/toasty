@@ -13,7 +13,7 @@ from quart import Config
 from logging import Logger
 
 from toastyserver.roommanager import RoomManager
-from toastyserver.models import AntifreezeRun, AntifreezeResult, RoomDetails
+from toastyserver.models import AntifreezeRun, AntifreezeResult, RoomDetails, User
 
 
 class Antifreezer:
@@ -38,6 +38,16 @@ class Antifreezer:
         self.roomJobs[roomId] = self.scheduler.add_job(
             self.runAntifreeze, "cron", (roomId,), hour=0, jitter=60 * 60
         )  # Antifreeze jobs will execute over a 3-hour time window
+
+    async def notifyRoomAdded(self, roomId: int, user: User):
+        try:
+            chatRoom = await self.bot.joinRoom(roomId)
+            await chatRoom.send(
+                f"Toasty Antifreeze has been enabled on this room by [{user.name}](https://chat.stackexchange.com/users/{user.chatIdent})."
+                f" Moderators or owners of this room can edit or disable antifreezing [here]({self.config['DOMAIN']}/rooms/{roomId})."
+            )
+        except OperationFailedError:
+            pass
 
     def removeAntifreeze(self, roomId: int):
         self.logger.info(f"Antifreeze removed for room {roomId}")
