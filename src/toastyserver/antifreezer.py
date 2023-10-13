@@ -48,6 +48,8 @@ class Antifreezer:
             )
         except OperationFailedError:
             pass
+        finally:
+            self.bot.leaveRoom(roomId)
 
     def removeAntifreeze(self, roomId: int):
         self.logger.info(f"Antifreeze removed for room {roomId}")
