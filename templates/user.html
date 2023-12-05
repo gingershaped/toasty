@@ -34,6 +34,8 @@
                     </select>
                 </div>
                 <p>Account created at {{ target.created.strftime("%e %b %Y %H:%M:%S%p") }}</p>
+                {% else %}
+                <input type="hidden" name="role" value="{{ user.role }}"/>
                 {% endif %}
                 <hr class="mb-2">
                 <button type="submit" class="btn btn-primary align-self-sm-end">Save changes</button>
