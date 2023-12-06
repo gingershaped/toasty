@@ -36,11 +36,12 @@
                     <ul id="room-list" class="list-group list-group-flush rounded">
                     </ul>
                 </div>
+                <div class="form-text">only rooms you are an owner of are listed</div>
             </div>
             <div class="col-md-6 d-flex flex-column">
                 {% include "room-edit-form.html" %}
                 <hr class="mt-auto mb-2">
-                <button type="submit" class="btn btn-primary align-self-sm-end">Add room</button>
+                <button id="submit" type="submit" class="btn btn-primary align-self-sm-end" disabled>Add room</button>
             </div>
         </div>
     </form>

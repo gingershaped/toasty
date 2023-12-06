@@ -58,6 +58,7 @@ class AntifreezeRoom(Model):
     pendingErrors: int = 0
     message: str = DEFAULTMSG
     runs: list[AntifreezeRun] = []
+    owners: list[int] = []
     addedBy: int  # Why isn't this a reference? Becase odmantic doesn't support querying across refrences for SOME REASON
 
 
@@ -100,8 +101,6 @@ class RoomListResponse:
 
 
 # other stuff
-
-
 @dataclass
 class RoomDetails:
     ident: int

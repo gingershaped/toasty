@@ -22,4 +22,4 @@ class RoomManager:
         await self.db.save(room, session=session)
 
     def getRoomsOfUser(self, user: User, session: Optional[AIOSession] = None):
-        return self.db.find(AntifreezeRoom, AntifreezeRoom.addedBy == user.ident, session=session)
+        return self.db.find(AntifreezeRoom, {"$or": [AntifreezeRoom.addedBy == user.ident, {+AntifreezeRoom.owners: user.chatIdent}]}, session=session) # type: ignore

@@ -30,7 +30,7 @@ class JankApi:
         self.blueprint.errorhandler(RequestSchemaValidationError)(
             self.handleValidationError
         )
-        self.blueprint.route("/ownedrooms", ["POST"])(
+        self.blueprint.route("/ownedrooms", methods=["POST"])(
             self.usermanager.requireUser(Role.USER)(self.userOwnedRoomsEndpoint)
         )
 
@@ -54,7 +54,7 @@ class JankApi:
             async with session.get(
                 urljoin(server, f"/account/{user.ident}")
             ) as response:
-                soup = BeautifulSoup(await response.read(), features="html.parser")
+                soup = BeautifulSoup(await response.read(), features="lxml")
         assert isinstance(cards := soup.find(id="user-owningcards"), Tag | None)
         if cards is None:
             return

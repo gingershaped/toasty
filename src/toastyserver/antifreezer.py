@@ -1,15 +1,13 @@
-from typing import Optional
 from datetime import datetime
 from urllib.parse import urljoin
+from bs4 import BeautifulSoup, Tag
 
-from odmantic import AIOEngine
-from odmantic.session import AIOSession
 from pytz import UTC
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.job import Job
 from sechat import Bot
 from sechat.errors import OperationFailedError
-from quart import Config
+from flask import Config
 from logging import Logger
 
 from toastyserver.roommanager import RoomManager
@@ -77,6 +75,17 @@ class Antifreezer:
             description=json["description"]
         )
 
+    async def getOwnersOfRoom(self, room: int, server: str):
+        async with self.bot.session.get(
+            urljoin(server, f"/rooms/info/{room}")
+        ) as response:
+            soup = BeautifulSoup(await response.read(), features="lxml")
+        assert isinstance(cards := soup.find(id="room-ownercards"), Tag)
+        for tag in cards.find_all(class_="usercard"):
+            if not isinstance(tag, Tag):
+                continue
+            yield int(tag.attrs["id"].removeprefix("owner-user-"))
+
     async def runAntifreeze(self, roomId: int):
         logger = self.logger.getChild(str(roomId))
         logger.info(f"Checking {roomId}")
@@ -105,6 +114,7 @@ class Antifreezer:
             else:
                 details = await self.getRoomDetails(roomId, room.server)
                 room.name = details.name
+                room.owners = [i async for i in self.getOwnersOfRoom(roomId, room.server)]
                 logger.info(
                     f"Last sent message was at {lastMessage.strftime('%e %b %Y %H:%M:%S%p')}, which was {(lastChecked - lastMessage).days} days ago"
                 )

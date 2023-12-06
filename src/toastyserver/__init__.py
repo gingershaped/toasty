@@ -281,7 +281,7 @@ async def roomDetails(roomId: int, user: User):
     room = await roommanager.getRoom(roomId)
     if room is None:
         abort(404)
-    if user.role < Role.MODERATOR and room.addedBy != user.ident:
+    if user.role < Role.MODERATOR and not (room.addedBy == user.ident or user.chatIdent in room.owners):
         abort(403)
     if user.role >= Role.MODERATOR:
         addedBy = await usermanager.getUser(room.addedBy)
