@@ -186,7 +186,7 @@ async def finalizeSeLogin():
             f"https://chat.stackexchange.com/account/{userId}", allow_redirects=False
         ) as response:
             if response.status != 302:
-                await flash("Failed to create account: You do not have a chat account.")
+                await flash("Failed to create account: You do not have a chat account.", "error")
                 return redirect(url_for("index"))
             chatIdent = int(
                 response.headers["location"].removeprefix("/").split("/")[1]
