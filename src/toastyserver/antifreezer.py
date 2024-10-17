@@ -1,11 +1,12 @@
 from datetime import datetime
 from urllib.parse import urljoin
+from aiohttp import ClientSession
 from bs4 import BeautifulSoup, Tag
 
 from pytz import UTC
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.job import Job
-from sechat import Bot
+from sechat import Credentials, Room
 from sechat.errors import OperationFailedError
 from flask import Config
 from logging import Logger
@@ -15,11 +16,11 @@ from toastyserver.models import AntifreezeRun, AntifreezeResult, RoomDetails, Us
 
 
 class Antifreezer:
-    def __init__(self, config: Config, manager: RoomManager, bot: Bot, logger: Logger):
+    def __init__(self, config: Config, manager: RoomManager, credentials: Credentials, logger: Logger):
         self.logger = logger
         self.config = config
         self.manager = manager
-        self.bot = bot
+        self.credentials = credentials
         self.scheduler = AsyncIOScheduler(timezone=UTC)
         self.roomJobs: dict[int, Job] = {}
 
@@ -38,36 +39,35 @@ class Antifreezer:
         )  # Antifreeze jobs will execute over a 3-hour time window
 
     async def notifyRoomAdded(self, roomId: int, user: User):
-        try:
-            chatRoom = await self.bot.joinRoom(roomId)
-            await chatRoom.send(
-                f"Toasty Antifreeze has been enabled on this room by [{user.name}](https://chat.stackexchange.com/users/{user.chatIdent})."
-                f" Moderators or owners of this room can edit or disable antifreezing [here]({self.config['DOMAIN']}/rooms/{roomId})."
-            )
-        except OperationFailedError:
-            pass
-        finally:
-            self.bot.leaveRoom(roomId)
+        async with await Room.join(self.credentials, roomId) as room:
+            try:
+                await room.send(
+                    f"Toasty Antifreeze has been enabled on this room by [{user.name}](https://chat.stackexchange.com/users/{user.chatIdent})."
+                    f" Moderators or owners of this room can edit or disable antifreezing [here]({self.config['DOMAIN']}/rooms/{roomId})."
+                )
+            except OperationFailedError:
+                pass
 
     def removeAntifreeze(self, roomId: int):
         self.logger.info(f"Antifreeze removed for room {roomId}")
         self.scheduler.remove_job(self.roomJobs[roomId].id)
 
     async def lastMessageInRoom(self, roomId: int) -> datetime:
-        async with self.bot.session.post(
-            f"https://chat.stackexchange.com/chats/{roomId}/events",
-            data={"since": 0, "mode": "Messages", "msgCount": 100, "fkey": self.bot.fkey},
-            headers={"Referer": "https://chat.stackexchange.com/rooms/{roomId}"},
-        ) as response:
-            # Ginger, please remember the 21st night of September
-            humanMessages = list(filter(lambda msg: msg["user_id"] > 0, (await response.json())["events"]))
-            if not len(humanMessages):
-                return datetime.fromtimestamp(0) # unfortunate hack
-            latestMessage = humanMessages[-1]
+        async with self.credentials.session() as session:
+            fkey = await Credentials.scrape_fkey(session, self.credentials.server)
+            async with session.post(
+                f"/chats/{roomId}/events",
+                data={"since": 0, "mode": "Messages", "msgCount": 100, "fkey": fkey},
+            ) as response:
+                # Ginger, please remember the 21st night of September
+                humanMessages = list(filter(lambda msg: msg["user_id"] > 0, (await response.json())["events"]))
+                if not len(humanMessages):
+                    return datetime.fromtimestamp(0) # unfortunate hack
+                latestMessage = humanMessages[-1]
         return datetime.fromtimestamp(latestMessage["time_stamp"])
 
     async def getRoomDetails(self, ident: int, server: str) -> RoomDetails:
-        async with self.bot.session.get(urljoin(server, f"/rooms/thumbs/{ident}")) as response:
+        async with ClientSession() as session, session.get(urljoin(server, f"/rooms/thumbs/{ident}")) as response:
                 json = await response.json()
         return RoomDetails(
             ident=int(json["id"]),
@@ -76,7 +76,7 @@ class Antifreezer:
         )
 
     async def getOwnersOfRoom(self, room: int, server: str):
-        async with self.bot.session.get(
+        async with ClientSession() as session, session.get(
             urljoin(server, f"/rooms/info/{room}")
         ) as response:
             soup = BeautifulSoup(await response.read(), features="lxml")
@@ -90,31 +90,28 @@ class Antifreezer:
         logger = self.logger.getChild(str(roomId))
         logger.info(f"Checking {roomId}")
         async with self.manager.db.session() as session:
-            room = await self.manager.getRoom(roomId)
-            assert room is not None
-            if not room.active:
+            roomDetails = await self.manager.getRoom(roomId)
+            assert roomDetails is not None
+            if not roomDetails.active:
                 logger.info("Room is not active. Skipping.")
                 return
             lastChecked = datetime.now()
             try:
-                lastMessage = await self.lastMessageInRoom(room.roomId)
+                lastMessage = await self.lastMessageInRoom(roomDetails.roomId)
             except OperationFailedError as error:
                 logger.warning(f"An error occured! {error.args}")
-                if len(error.args) > 1:
-                    message = error.args[1]
-                else:
-                    message = error.args[0]
+                message = error.args[1]
                 run = AntifreezeRun(
                     result=AntifreezeResult.ERROR,
                     ranAt=lastChecked,
                     mostRecentMessage=None,
                     error=message,
                 )
-                room.pendingErrors += 1
+                roomDetails.pendingErrors += 1
             else:
-                details = await self.getRoomDetails(roomId, room.server)
-                room.name = details.name
-                room.owners = [i async for i in self.getOwnersOfRoom(roomId, room.server)]
+                details = await self.getRoomDetails(roomId, roomDetails.server)
+                roomDetails.name = details.name
+                roomDetails.owners = [i async for i in self.getOwnersOfRoom(roomId, roomDetails.server)]
                 logger.info(
                     f"Last sent message was at {lastMessage.strftime('%e %b %Y %H:%M:%S%p')}, which was {(lastChecked - lastMessage).days} days ago"
                 )
@@ -130,33 +127,28 @@ class Antifreezer:
                     )
                 else:
                     self.logger.info("Antifreezing room!")
-                    chatRoom = await self.bot.joinRoom(room.roomId)
-                    try:
-                        await chatRoom.send(room.message.format(days=delta.days))
-                    except OperationFailedError as error:
-                        logger.warning(f"An error occured! {error.args}")
-                        if len(error.args) > 1:
-                            message = error.args[1]
-                        else:
+                    async with await Room.join(self.credentials, roomDetails.roomId) as room:
+                        try:
+                            await room.send(roomDetails.message.format(days=delta.days))
+                        except OperationFailedError as error:
+                            logger.warning(f"An error occured! {error.args}")
                             message = error.args[0]
-                        run = AntifreezeRun(
-                            result=AntifreezeResult.ERROR,
-                            ranAt=lastChecked,
-                            mostRecentMessage=None,
-                            error=message,
-                        )
-                        room.pendingErrors += 1
-                    else:
-                        run = AntifreezeRun(
-                            result=AntifreezeResult.ANTIFREEZED,
-                            ranAt=lastChecked,
-                            mostRecentMessage=lastMessage,
-                            error=None,
-                        )
-                    finally:
-                        self.bot.leaveRoom(roomId)
-        room.runs.insert(0, run)
-        if len(room.runs) > 32:
-            room.runs = room.runs[:32]
-        await self.manager.saveRoom(room)
+                            run = AntifreezeRun(
+                                result=AntifreezeResult.ERROR,
+                                ranAt=lastChecked,
+                                mostRecentMessage=None,
+                                error=message,
+                            )
+                            roomDetails.pendingErrors += 1
+                        else:
+                            run = AntifreezeRun(
+                                result=AntifreezeResult.ANTIFREEZED,
+                                ranAt=lastChecked,
+                                mostRecentMessage=lastMessage,
+                                error=None,
+                            )
+        roomDetails.runs.insert(0, run)
+        if len(roomDetails.runs) > 32:
+            roomDetails.runs = roomDetails.runs[:32]
+        await self.manager.saveRoom(roomDetails)
         self.logger.info("Antifreeze completed.")

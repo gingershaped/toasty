@@ -2,23 +2,21 @@
 name = "toastyserver"
 version = "0.1.0"
 description = ""
-authors = ["Ginger <75683114+gingerindustries@users.noreply.github.com>"]
+authors = ["Ginger <75683114+gingershaped@users.noreply.github.com>"]
 readme = "README.md"
 packages = [{ include = "toastyserver", from="src" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-sechat = {git = "https://github.com/GingerIndustries/sechat", rev = "v2"}
-quart = "^0.19.4"
-quart-schema = "^0.16.0"
+sechat = {git = "https://github.com/gingershaped/sechat", rev = "v3"}
+quart = "^0.19.6"
 apscheduler = "^3.10.4"
-motor = "<3.2.0"
-odmantic = "^0.9.2"
-pydantic = "^1.0.0"
+motor = ">=3.6"
+odmantic = "^1.0.2"
+pydantic = "^2.0.0"
 bs4 = "^0.0.1"
 aiohttp = "^3.8.5"
 hypercorn = "^0.14.4"
-lxml = "^4.9.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.9.1"

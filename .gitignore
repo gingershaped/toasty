@@ -4,3 +4,4 @@ node_modules/
 static/**
 !static/resources/
 config.py
+credentials.dat

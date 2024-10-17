@@ -3,12 +3,6 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup, Tag
 from aiohttp import ClientSession, CookieJar
 from quart import Blueprint, abort
-from quart_schema import (
-    validate_request,
-    validate_response,
-    RequestSchemaValidationError,
-    DataSource,
-)
 
 from toastyserver.models import (
     RoomListRequest,
@@ -27,22 +21,9 @@ class JankApi:
         self.usermanager = usermanager
         self.roommanager = roommanager
         self.blueprint = Blueprint("jankapi", __name__, url_prefix="/jankapi")
-        self.blueprint.errorhandler(RequestSchemaValidationError)(
-            self.handleValidationError
-        )
         self.blueprint.route("/ownedrooms", methods=["POST"])(
             self.usermanager.requireUser(Role.USER)(self.userOwnedRoomsEndpoint)
         )
-
-    async def handleValidationError(self, error):
-        if isinstance(error.validation_error, TypeError):
-            return {
-                "errors": str(error.validation_error),
-            }, 400
-        else:
-            return {
-                "errors": error.validation_error.json(),
-            }, 400
 
     async def getUserOwnedRooms(
         self, user: User, server: str, excludeExisting: bool = True
@@ -69,8 +50,6 @@ class JankApi:
                 continue
             yield ident, name.attrs["title"]
 
-    @validate_request(RoomListRequest)
-    @validate_response(RoomListResponse)
     async def userOwnedRoomsEndpoint(self, user: User, data: RoomListRequest):
         return RoomListResponse(
             [

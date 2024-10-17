@@ -6,9 +6,8 @@ from asyncio import wait_for
 from string import printable
 
 from quart import Quart, g, render_template, request, redirect, abort, flash, url_for
-from quart_schema import QuartSchema
 from werkzeug.exceptions import HTTPException
-from sechat import Bot
+from sechat import Credentials, Room
 from odmantic import AIOEngine
 from motor.motor_asyncio import AsyncIOMotorClient
 from aiohttp import ClientSession
@@ -40,10 +39,9 @@ usermanager = UserManager(db)
 roommanager = RoomManager(db)
 jankapi = JankApi(usermanager, roommanager)
 app.register_blueprint(jankapi.blueprint)
-QuartSchema(app, openapi_path=None)
 
 
-@app.before_serving
+@app.while_serving
 async def start():
     global antifreezer, bot
     async with ClientSession() as session:
@@ -61,22 +59,15 @@ async def start():
                 site["site_url"]: site["api_site_parameter"]
                 for site in (await response.json())["items"]
             }
-    bot = Bot(logger=app.logger.getChild("Bot"))
-    await bot.authenticate(
-        app.config["BOT_EMAIL"], app.config["BOT_PASSWORD"], app.config["BOT_HOST"]
+    credentials = await Credentials.load_or_authenticate(
+        "credentials.dat", app.config["BOT_EMAIL"], app.config["BOT_PASSWORD"]
     )
     antifreezer = Antifreezer(
-        app.config, roommanager, bot, app.logger.getChild("Antifreezer")
+        app.config, roommanager, credentials, app.logger.getChild("Antifreezer")
     )
     await antifreezer.initialSchedule()
-
-
-@app.after_serving
-async def shutdown():
-    assert antifreezer is not None
-    assert bot is not None
+    yield
     antifreezer.shutdown()
-    await wait_for(bot.session.close(), 3)
 
 
 @app.errorhandler(HTTPException)
@@ -145,6 +136,7 @@ async def finalizeSeLogin():
             },
         ) as response:
             if response.status != 200:
+                app.logger.warning(f"Got {response.status} response from SE auth API: {await response.text()}")
                 abort(400)
             token = (await response.json())["access_token"]
         async with session.get(
@@ -162,6 +154,7 @@ async def finalizeSeLogin():
         ) as response:
             sites = (await response.json())["items"]
             userId = sites[0]["account_id"]
+        app.logger.info(f"Logging in user {userId}")
         async with session.get(
             "https://api.stackexchange.com/2.3/me?{}".format(
                 urlencode(
@@ -182,41 +175,46 @@ async def finalizeSeLogin():
             )
         ) as response:
             userName = (await response.json())["items"][0]["display_name"][:16]
-        async with session.get(
-            f"https://chat.stackexchange.com/account/{userId}", allow_redirects=False
-        ) as response:
-            if response.status != 302:
-                await flash("Failed to create account: You do not have a chat account.", "error")
-                return redirect(url_for("index"))
-            chatIdent = int(
-                response.headers["location"].removeprefix("/").split("/")[1]
-            )
 
-    now = datetime.now()
-    isModerator = any(site["user_type"] == "moderator" for site in sites)
-    async with db.session() as session:
-        if not await usermanager.userExists(userId, session):
-            if not any(site["reputation"] >= 200 for site in sites):
-                await flash(
-                    "Failed to create account: Insufficient reputation!", "error"
+        now = datetime.now()
+        isModerator = any(site["user_type"] == "moderator" for site in sites)
+        async with db.session() as dbSession:
+            if not await usermanager.userExists(userId, dbSession):
+                app.logger.info(f"Creating account for user {userId}")
+                if not any(site["reputation"] >= 200 for site in sites):
+                    app.logger.info("Account creation failed: insufficient reputation")
+                    await flash(
+                        "Failed to create account: Insufficient reputation!", "error"
+                    )
+                    return redirect(url_for("index"))
+                async with session.get(
+                    f"https://chat.stackexchange.com/account/{userId}", allow_redirects=False
+                ) as response:
+                    if response.status != 302:
+                        app.logger.info("Account creation failed: no chat account")
+                        await flash("Failed to create account: You do not have a chat account.", "error")
+                        return redirect(url_for("index"))
+                    chatIdent = int(
+                        response.headers["location"].removeprefix("/").split("/")[1]
+                    )
+                await usermanager.saveUser(
+                    user := User(
+                        ident=userId,
+                        chatIdent=chatIdent,
+                        name=userName,
+                        role=Role.MODERATOR if isModerator else Role.USER,
+                        created=now,
+                    ),
+                    dbSession,
                 )
-                return redirect(url_for("index"))
-            await usermanager.saveUser(
-                user := User(
-                    ident=userId,
-                    chatIdent=chatIdent,
-                    name=userName,
-                    role=Role.MODERATOR if isModerator else Role.USER,
-                    created=now,
-                ),
-                session,
-            )
-            await flash("Account created!", "success")
-        else:
-            user = await usermanager.getUser(userId, session)
-            assert user is not None
-            await flash("Logged in successfully.", "success")
-        token = await usermanager.issueToken(user, now, now + timedelta(30))
+                app.logger.info(f"Account created for user {userId} ({userName}, chat {chatIdent})")
+                await flash("Account created!", "success")
+            else:
+                user = await usermanager.getUser(userId, dbSession)
+                assert user is not None
+                await flash("Logged in successfully.", "success")
+            app.logger.info(f"Issuing token for {userId} ({userName})")
+            token = await usermanager.issueToken(user, now, now + timedelta(30))
 
     response = redirect(
         url_for("index")
