@@ -1,17 +1,13 @@
 from typing import Optional
 from datetime import datetime
-from enum import Enum, IntEnum
+from enum import IntEnum
 from dataclasses import dataclass
+from sechat import Server
 
 from odmantic import Model, EmbeddedModel, Field, Reference
 from pydantic import BaseModel, Field as PDField
 
 DEFAULTMSG = "Toasty Antifreeze triggered! Last message was sent {days} days ago."
-
-class Server(str, Enum):
-    SE = "https://chat.stackexchange.com"
-    SO = "https://chat.stackoverflow.com"
-    MSE = "https://chat.meta.stackexchange.com"
 
 
 class Role(IntEnum):
@@ -59,7 +55,7 @@ class AntifreezeRoom(Model):
     message: str = DEFAULTMSG
     runs: list[AntifreezeRun] = []
     owners: list[int] = []
-    addedBy: int  # Why isn't this a reference? Becase odmantic doesn't support querying across refrences for SOME REASON
+    addedBy: int  # Why isn't this a reference? Becase odmantic doesn't support querying across references for SOME REASON
 
 
 # forms
@@ -81,23 +77,6 @@ class EditRoomForm(BaseModel):
 class EditUserForm(BaseModel):
     username: str
     role: Role
-
-
-# models for Jank API
-@dataclass
-class RoomListRequest:
-    server: Server
-
-
-@dataclass
-class MiniRoom:
-    ident: int
-    name: str
-
-
-@dataclass
-class RoomListResponse:
-    rooms: list[MiniRoom]
 
 
 # other stuff

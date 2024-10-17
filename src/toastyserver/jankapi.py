@@ -2,12 +2,10 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup, Tag
 from aiohttp import ClientSession, CookieJar
-from quart import Blueprint, abort
+from quart import Blueprint, abort, request
+from sechat import Server
 
 from toastyserver.models import (
-    RoomListRequest,
-    RoomListResponse,
-    MiniRoom,
     User,
     Role,
     RoomDetails,
@@ -50,10 +48,6 @@ class JankApi:
                 continue
             yield ident, name.attrs["title"]
 
-    async def userOwnedRoomsEndpoint(self, user: User, data: RoomListRequest):
-        return RoomListResponse(
-            [
-                MiniRoom(ident, name)
-                async for ident, name in self.getUserOwnedRooms(user, data.server.value)
-            ]
-        )
+    async def userOwnedRoomsEndpoint(self, user: User):
+        server = Server((await request.json)["server"])
+        return {"rooms": [{"ident": ident, "name": name} async for ident, name in self.getUserOwnedRooms(user, server.value)]}

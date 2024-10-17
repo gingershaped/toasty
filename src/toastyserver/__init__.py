@@ -198,7 +198,7 @@ async def finalizeSeLogin():
                         response.headers["location"].removeprefix("/").split("/")[1]
                     )
                 await usermanager.saveUser(
-                    user := User(
+                    user := User( # type: ignore
                         ident=userId,
                         chatIdent=chatIdent,
                         name=userName,
@@ -392,7 +392,7 @@ async def newRoom(user: User):
             form = NewRoomForm(**(await request.form))
         except ValidationError:
             abort(400)
-        if form.server != Server.SE:
+        if form.server != Server.STACK_EXCHANGE:
             abort(400) # TODO
         if user.role < Role.MODERATOR:
             allowedRooms = [
@@ -413,7 +413,7 @@ async def newRoom(user: User):
         await antifreezer.notifyRoomAdded(form.room, user)
         details = await antifreezer.getRoomDetails(form.room, form.server.value)
         await roommanager.saveRoom(
-            AntifreezeRoom(
+            AntifreezeRoom( # type: ignore
                 roomId=form.room,
                 server=form.server,
                 name=details.name,
